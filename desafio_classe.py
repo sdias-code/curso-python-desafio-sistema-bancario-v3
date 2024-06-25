@@ -13,8 +13,115 @@
 # Dica: vincular usuário a uma conta, filtre a lista de usuários buscando o numero do cpf
 # Resumo: vincular conta por cpf
 
+from abc import ABC, abstractclassmethod, abstractproperty
 
-def exibir_extrato(saldo, extrato):
+class Cliente:
+    def __init__(self, endereco):
+        self.endereco = endereco
+        self.contas = []
+        
+    def realizar_transacao(self, conta, transacao):
+        transacao.registrar(conta)
+
+    def adicionar_conta(self, conta):
+        self.contas.append(conta)    
+
+class PessoaFisica(Cliente):
+    def __init__(self, nome, data_nascimento, cpf, endereco):
+        super().__init__(endereco)
+        self.nome = nome
+        self.data_nascimento = data_nascimento
+        self.cpf = cpf
+
+class Conta:
+    def __init__(self, numero, cliente):
+        self._saldo = 0
+        self._numero = numero
+        self._agencia = "0001"
+        self._cliente = cliente
+        self._historico = Historico()
+
+        @classmethod
+        def nova_conta(cls, cliente, numero):
+            return cls(numero, cliente)
+
+        @property
+        def numero(self):
+            return self._numero
+
+        @property
+        def agencia(self):
+            return self._agencia   
+
+        @property
+        def cliente(self):
+            return self._cliente    
+
+        @property
+        def historico(self):
+            return self._historico    
+
+        def sacar(self, valor):
+            saldo = self.saldo
+            saldo_excedido = valor > saldo
+
+            if saldo_excedido:
+                print("Valor do saque superior ao saldo em conta.")
+
+            elif valor  > 0:
+                self._saldo -= valor
+                print("Saque realizado com sucesso.")  
+                return True
+
+            else:
+                print("Operação falhou, o valor informado é inválido.")
+                
+            return False    
+
+        def depositar(self, valor):
+            if valor > 0:
+                self._saldo += valor
+                print("Depósito realizado com sucesso.")
+                return True
+            else:
+                print("Operação falhou, o valor informado é inválido.")
+                return False
+
+        def __str__(self):
+            return f"""
+            Agencia: {self.agencia}
+            C/C {self.numero}
+            Titular: {self.cliente.nome}
+            """        
+
+class ContaCorrent(Conta):
+    def __init__(self, numero, cliente, limite=500, limite_saques=3):
+        super().__init__(numero, cliente)
+        self.limite = limite
+        self.limite_saques = limite_saques
+
+    def sacar(self, valor):
+        numero_saques = len([transacao for transacao in self.historico.transacao if transacao['tipo'] == Saque.__name__])
+        excedeu_limite = valor > self.limite
+        excedeu_saque = numero_saques > self.limite_saques
+
+        if excedeu_limite:
+            print("Operação falhou, limite de R$ 500,00 excedido.")
+
+        elif excedeu_saque:
+            print("Operação falhou, Número máximo de saques excedido.")    
+
+        else:
+            return super().sacar(valor)    
+
+class Historico:
+    def __init__(self):
+        self.transacoes = []
+
+        
+
+
+def exibir_extrato(saldo, extrato):  
 
     print("\nExibindo extrato")
 
@@ -22,7 +129,7 @@ def exibir_extrato(saldo, extrato):
 
         item_valor = "R$ {:,.2f}".format(operacao["Valor"])
         print("---------------------------------------------------------------------")
-        print(f"Tipo Operação: {operacao["Operacao"]}, Valor: {item_valor}")        
+        print(f"Tipo Operação: {operacao['Operacao']}, Valor: {item_valor}")        
         print("---------------------------------------------------------------------")
         
     saldo_formatado = "Saldo em conta: R$ {:,.2f}".format(saldo)
@@ -156,9 +263,9 @@ def cadastrar_usuario(): # Cadastrar Usuário
     usuario = dict(Nome = nome, Nascimento = nascimento, Cpf = cpf, Endereco = [dict(Logradouro = logradouro, Numero = numero, Bairro = bairro, Cidade = cidade)],)
 
     usuarios.append(usuario)
-    print("================================================")
+    print("=" * 40)
     exibir_usuario_cadastrado(usuario)
-    print("================================================")
+    print("=" * 40)
 
 def obter_usuario(cpf, usuarios):
     buscar_usuario_por_cpf = [usuario for usuario in usuarios if usuario["Cpf"] == cpf]
@@ -174,11 +281,11 @@ def validar_usuario_cadastrado(cpf):
 def exibir_conta_cadastrada(conta):
     
     print("\nConta cadastrada:")
-    print("------------------------------------------------------------------------")
+    print("-" * 40)
     print(f"Agencia: {conta["Agencia"]}")
     print(f"Número: {conta["Numero"]}")
     print(f"Usuario: {conta["Usuario"]}")
-    print("------------------------------------------------------------------------")
+    print("-" * 40)
 
 def criar_conta(agencia, numero, numero_conta_sequencial, usuarios):
     print("Digite o CPF do usuário: ")
