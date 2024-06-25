@@ -14,6 +14,7 @@
 # Resumo: vincular conta por cpf
 
 from abc import ABC, abstractclassmethod, abstractproperty
+import datetime
 
 class Cliente:
     def __init__(self, endereco):
@@ -85,14 +86,7 @@ class Conta:
                 return True
             else:
                 print("Operação falhou, o valor informado é inválido.")
-                return False
-
-        def __str__(self):
-            return f"""
-            Agencia: {self.agencia}
-            C/C {self.numero}
-            Titular: {self.cliente.nome}
-            """        
+                return False        
 
 class ContaCorrent(Conta):
     def __init__(self, numero, cliente, limite=500, limite_saques=3):
@@ -112,14 +106,69 @@ class ContaCorrent(Conta):
             print("Operação falhou, Número máximo de saques excedido.")    
 
         else:
-            return super().sacar(valor)    
+            return super().sacar(valor)   
+
+    def __str__(self):
+            return f"""
+            Agencia: {self.agencia}
+            C/C {self.numero}
+            Titular: {self.cliente.nome}
+            """                           
 
 class Historico:
     def __init__(self):
-        self.transacoes = []
+        self.transacoes = []        
 
-        
+    def transacoes(self):
+        return self._transacoes
 
+    def adicionar_transacoes(self, transacao):
+        self._transacao.append(
+            {"tipo": transacao.__class__.___name___,
+                "valor": transacao.valor,
+                "data": datetime.now().strftime(
+                    "%d-%m-%Y %H:%M:%s"
+                ),
+            }
+        )
+
+class Transacao(ABC):
+    @property
+    @abstractproperty
+    def valor(self):
+        pass
+
+    @abstractclassmethod
+    def registrar(self, conta):
+        pass
+
+class Saque(Transacao):
+    def __init__(self, valor):
+        self._valor = valor
+
+    @property
+    def valor(self):
+        return self._valor
+
+    def registrar(self, conta):
+        sucesso_transacao = conta.sacar(self.valor)
+
+        if sucesso_transacao:
+            conta.historico.adicionar_transacao(self)    
+
+class Deposito(Transacao):
+    def __init__(self, valor):
+        self._valor = valor   
+
+        @property
+        def valor(self):
+            return self._valor
+
+        def registrar(self, conta):
+            sucesso_transacao = conta.depositar(self.valor)
+
+            if sucesso_transacao:
+                conta.historico.adicionar_transacao(self)                 
 
 def exibir_extrato(saldo, extrato):  
 
