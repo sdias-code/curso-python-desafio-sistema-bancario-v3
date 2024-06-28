@@ -133,7 +133,7 @@ class Historico:
         return self._transacoes
 
     def adicionar_transacao(self, transacao):
-        nome = transacao.__class__.__name__
+        
         self._transacoes.append(
             {
                 "tipo": transacao.__class__.__name__ ,
@@ -211,19 +211,23 @@ def recuperar_conta_cliente(cliente):
     return cliente[0].contas[0]
 
 # Depositar
-def depositar(cliente):
-    operacao("deposito", cliente)
+def depositar(clientes):
+    operacao("deposito", clientes)
 
 # Sacar
-def sacar(cliente): 
-    operacao("saque", cliente)
+def sacar(clientes): 
+    operacao("saque", clientes)
 
-def operacao(tipo, cliente):
+def operacao(tipo, clientes):
+    cpf = input("Informe o CPF do cliente: ")
+
+    cliente = filtrar_cliente(cpf, clientes)
+
     if not cliente:
         print("Cliente não encontrado!")
         return
     
-    entrada_valor = input("Informe o valor do depósito: ")   
+    entrada_valor = input(f"Informe o valor para {tipo}: ")   
 
     if entrada_valor.isdigit():
         valor = float(entrada_valor)
@@ -349,16 +353,14 @@ def exibir_extrato(clientes):
     if not cliente:
         print("Cliente não encontrado.")
         return
-
-    conta = recuperar_conta_cliente(cliente)
-
-    if not conta:
+    
+    if not cliente.contas:
         print("Conta não encontrada.")
         return            
 
     print("\nExibindo extrato")
 
-    transacoes = conta.historico.transacoes
+    transacoes = cliente.contas[0].historico.transacoes
 
     extrato = ""
 
