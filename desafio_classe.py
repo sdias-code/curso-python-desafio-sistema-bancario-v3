@@ -102,9 +102,9 @@ class ContaCorrente(Conta):
         self.limite_saques = limite_saques
 
     def sacar(self, valor):
-        numero_saques = len([transacao for transacao in self.historico.transacao if transacao['tipo'] == Saque.__name__])
+        numero_saques = len([transacao for transacao in self.historico.transacoes if transacao['tipo'] == Saque.__name__])
         excedeu_limite = valor > self.limite
-        excedeu_saque = numero_saques > self.limite_saques    
+        excedeu_saque = numero_saques >= self.limite_saques    
 
         if excedeu_limite:
             print("Operação falhou, limite de R$ 500,00 excedido.")
@@ -204,11 +204,11 @@ def filtrar_cliente(cpf, clientes):
 
 # Recuperar conta cliente
 def recuperar_conta_cliente(cliente):    
-    if not cliente[0].contas:
+    if not cliente.contas:
         print("Cliente não possui conta")
         return 
 
-    return cliente[0].contas[0]
+    return cliente.contas[0]
 
 # Depositar
 def depositar(clientes):
@@ -247,7 +247,7 @@ def operacao(tipo, clientes):
         elif tipo == "saque":
             transacao = Saque(valor)
 
-        cliente[0].realizar_transacao(conta, transacao)
+        cliente.realizar_transacao(conta, transacao)
 
     else:
         print("Valor digitado inválido")
@@ -338,7 +338,7 @@ def listar_contas(contas):
         print("-" * 40)
         info_conta = f"""
         Agencia: {conta.agencia}
-        Número: {conta.numero}
+        C/C: {conta.numero}
         Cliente: {conta.cliente.nome}
         """
         print(info_conta)
@@ -370,7 +370,7 @@ def exibir_extrato(clientes):
         for transacao in transacoes:
             extrato += f"\n{transacao['tipo']}: \n\tR$ {transacao['valor']:.2f}" 
     print(extrato)
-    print(f"\nSaldo: \n\tR$ {conta.saldo:.2f}")    
+    print(f"\nSaldo: \n\tR$ {cliente.contas[0].saldo:.2f}")    
     print("=" * 40)
 
 def exibir_menu():
@@ -395,13 +395,31 @@ def main():
     clientes = []
     contas = []
 
+    # Sistema com dois clientes e duas contas pré-preenchidos
     cliente1 = PessoaFisica(
         nome = "Silvio Dias",
         data_nascimento = "26/02/1980", 
-        cpf = "123456", 
-        endereco = [dict(logradouro = "Rua das pernizes", numero = 35, bairro = "Leblon", cidade = "Rio de Janeiro/RJ")],)
+        cpf = '12345', 
+        endereco = [dict(logradouro = "Rua Barata Ribeiro", numero = 35, bairro = "Copacabana", cidade = "Rio de Janeiro/RJ")],)
 
     clientes.append(cliente1)
+
+    cliente2 = PessoaFisica(
+    nome = "Marcos Dias", 
+    data_nascimento = "22/05/1990", 
+    cpf = '123456', 
+    endereco = [dict(logradouro = "Rua São Clemente", numero = 104, bairro = "Botafogo", cidade = "Rio de Janeiro/RJ")],)
+
+    clientes.append(cliente2)
+
+    conta1 = ContaCorrente.nova_conta(cliente=cliente1, numero=1)
+    contas.append(conta1)
+    cliente1.contas.append(conta1)
+
+    conta2 = ContaCorrente.nova_conta(cliente=cliente2, numero=2)
+    contas.append(conta2)
+    cliente2.contas.append(conta2)
+
 
     while True:
         exibir_menu()
